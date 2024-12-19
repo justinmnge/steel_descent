@@ -14,7 +14,7 @@ class Player(pygame.sprite.Sprite):
         # movement
         self.direction = pygame.Vector2()
         self.speed = 250
-        self.rotation_speed =180
+        self.rotation_speed = 180
         
     def input(self, dt):
         keys = pygame.key.get_pressed()
@@ -30,15 +30,12 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(self.original_image, self.rotation)
         self.rect = self.image.get_frect(center = self.rect.center)
             
-        move_forward = int(keys[pygame.K_s]) - int(keys[pygame.K_w])
-        
-        if move_forward != 0:
-            movement_vector = pygame.Vector2(0, -1).rotate(-self.rotation) * move_forward
-        
-            self.rect.center += movement_vector * self.speed * dt
+        self.move_forward = int(keys[pygame.K_s]) - int(keys[pygame.K_w])
     
     def move(self, dt):
-        pass
+        if self.move_forward != 0:
+            movement_vector = pygame.Vector2(0, -1).rotate(-self.rotation) * self.move_forward
+            self.rect.center += movement_vector * self.speed * dt
     
     def update(self, dt):
         self.input(dt)
