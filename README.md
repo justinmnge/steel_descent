@@ -5,11 +5,11 @@
 ## How to Play
 
 1. **Run the Game**: Open your terminal and type `python3 main.py` to start the game.
-    - Dependencies required: Pygame-ce
+    - Dependencies required: Pygame-ce & pytmx
    
 2. **Controls**:
    - **WASD keys**: Vehicle movement.
-   - **Left-mouse button**: Fire tank cannon.
+   - **Left-mouse button**: Fire cannon.
    - **Esc key**: Pause the game.
 
 3. **Objective**: 
