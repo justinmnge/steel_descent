@@ -12,15 +12,51 @@ class Game:
         pygame.display.set_caption('Steel Descent')
         self.clock = pygame.time.Clock()
         self.running = True
-        
-        pygame.mouse.set_visible(False)
+        self.load_images()
         
         # groups
         self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
+        self.shell_sprites = pygame.sprite.Group()
         
         # setup
         self.setup()
+        
+        # gun timer
+        self.can_shoot = True
+        self.shoot_time = 0
+        self.gun_cooldown = 600
+    
+    def load_images(self):
+        self.shell_surf = pygame.image.load(join('images', 'fire', 'player_shell.png')).convert_alpha()
+        print("Shell image loaded:", self.shell_surf.get_size())
+    
+    def input(self):
+        # mouse left-click
+        if pygame.mouse.get_pressed()[0] and self.can_shoot:
+            # Get mouse position relative to screen center
+            mouse_pos = pygame.mouse.get_pos()
+            screen_center = (WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2)
+            
+            # Calculate direction vector
+            direction = pygame.Vector2(mouse_pos) - pygame.Vector2(screen_center)
+            direction = direction.normalize()
+            
+            # Calculate spawn position relative to turret
+            spawn_offset = direction * 66
+            spawn_pos = pygame.Vector2(self.turret.rect.center) + spawn_offset
+            
+            # Create shell
+            Shell(self.shell_surf, spawn_pos, direction, (self.all_sprites, self.shell_sprites))
+            
+            self.can_shoot = False
+            self.shoot_time = pygame.time.get_ticks()
+    
+    def gun_timer(self):
+        if not self.can_shoot:
+            current_time = pygame.time.get_ticks()
+            if current_time - self.shoot_time >= self.gun_cooldown:
+                self.can_shoot = True
     
     def setup(self):
     # pytmx map
@@ -59,11 +95,14 @@ class Game:
                     self.running = False
                     
             # update
+            self.gun_timer()
+            self.input()
             self.all_sprites.update(dt)
             
             # draw
             self.display_surface.fill('black')
-            self.all_sprites.draw(self.player.rect.center)            
+            self.all_sprites.draw(self.player.rect.center)
+                            
             pygame.display.update()
             
         pygame.quit()
