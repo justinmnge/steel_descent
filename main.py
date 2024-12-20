@@ -13,6 +13,8 @@ class Game:
         self.clock = pygame.time.Clock()
         self.running = True
         
+        pygame.mouse.set_visible(False)
+        
         # groups
         self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
@@ -21,25 +23,35 @@ class Game:
         self.setup()
     
     def setup(self):
-        # pytmx map
+    # pytmx map
         map = load_pygame(join('data', 'maps', 'map.tmx'))
         
         for x, y, image in map.get_layer_by_name('Ground').tiles():
-            Sprite((x * TILE_SIZE, y * TILE_SIZE), image, self.all_sprites)
+            sprite = Sprite((x * TILE_SIZE, y * TILE_SIZE), image, self.all_sprites)
+            self.all_sprites.add(sprite)  # Add the sprite
+            self.all_sprites.change_layer(sprite, 0)  # Set layer 0
             
         for obj in map.get_layer_by_name('Objects'):
-            CollisionSprite((obj.x, obj.y), obj.image, (self.all_sprites, self.collision_sprites))
-        
+            sprite = CollisionSprite((obj.x, obj.y), obj.image, (self.all_sprites, self.collision_sprites))
+            self.all_sprites.add(sprite)  # Add the sprite
+            self.all_sprites.change_layer(sprite, 1)  # Set layer 1
+            
         for obj in map.get_layer_by_name('Collisions'):
             CollisionSprite((obj.x, obj.y), pygame.Surface((obj.width, obj.height)), self.collision_sprites)
             
         for obj in map.get_layer_by_name('Entities'):
             if obj.name == 'Player':
                 self.player = Player((obj.x, obj.y), self.all_sprites, self.collision_sprites)
+                self.all_sprites.add(self.player)  # Add the player sprite
+                self.all_sprites.change_layer(self.player, 2)  # Set layer 2
+                
+                self.turret = Turret(self.player, self.all_sprites)
+                self.all_sprites.add(self.turret)  # Add the turret sprite
+                self.all_sprites.change_layer(self.turret, 3)  # Set layer 3
         
     def run(self):
         while self.running:
-            dt = self.clock.tick() / 1000
+            dt = self.clock.tick() / 1000            
             
             # event loop
             for event in pygame.event.get():
