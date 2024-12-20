@@ -46,8 +46,11 @@ class Game:
             spawn_offset = direction * 66
             spawn_pos = pygame.Vector2(self.turret.rect.center) + spawn_offset
             
+            # Adjustable X offset
+            x_offset = 0
+            
             # Create shell
-            Shell(self.shell_surf, spawn_pos, direction, (self.all_sprites, self.shell_sprites))
+            Shell(self.shell_surf, spawn_pos, direction, (self.all_sprites, self.shell_sprites), x_offset)
             
             self.can_shoot = False
             self.shoot_time = pygame.time.get_ticks()

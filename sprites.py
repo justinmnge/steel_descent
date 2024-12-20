@@ -56,18 +56,27 @@ class Turret(pygame.sprite.Sprite):
         )
 
 class Shell(pygame.sprite.Sprite):
-    def __init__(self, surf, pos, direction, groups):
+    def __init__(self, surf, pos, direction, groups, x_offset):
         super().__init__(groups)
-        self.image = surf
+        self.original_image = surf
+        self.image = self.original_image
         self.rect = self.image.get_frect(center = pos)
         
         # movement
         self.pos = pygame.Vector2(pos)
         self.direction = direction
         self.speed = 400
-        
+        self.x_offset = x_offset
         self.z = 4
-        print(f'Shell initialized at: {self.pos}')
+        
+        # Calculate angle of the shell based on the direction vector
+        self.angle = -degrees(atan2(self.direction.y, self.direction.x)) + 270  # Point bottom of shell towards the mouse
+        self.rotate_shell()  # Apply rotation to the shell image
+
+    def rotate_shell(self):
+        """Rotate the shell image to face the direction of movement."""
+        self.image = pygame.transform.rotozoom(self.original_image, self.angle, 1)
+        self.rect = self.image.get_frect(center=self.rect.center)  # Keep the center of the shell intact after rotation
         
     def update(self, dt):
         # Update position
@@ -75,3 +84,4 @@ class Shell(pygame.sprite.Sprite):
         movement = self.direction * self.speed * dt
         self.pos += movement
         self.rect.center = self.pos
+        self.rotate_shell()  # Update rotation
