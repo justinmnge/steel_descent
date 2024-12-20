@@ -10,7 +10,7 @@ class Player(pygame.sprite.Sprite):
         self.original_image = pygame.image.load(join('images', 'player', '0.png')).convert_alpha()
         self.image = self.original_image
         self.rect = self.image.get_frect(topleft = pos)
-        self.hitbox_rect = self.rect.inflate(-40, 0)
+        self.hitbox_rect = self.rect.inflate(-80, -70)
         
         # movement
         self.direction = pygame.Vector2()
@@ -89,6 +89,3 @@ class Player(pygame.sprite.Sprite):
     def update(self, dt):
         self.input(dt)
         self.move(dt)
-        
-    def draw_hitbox(self, surface):  # Debug method to visualize hitbox
-        pygame.draw.rect(surface, 'red', self.hitbox_rect, 1)
