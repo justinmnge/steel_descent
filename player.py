@@ -89,6 +89,3 @@ class Player(pygame.sprite.Sprite):
     def update(self, dt):
         self.input(dt)
         self.move(dt)
-        
-    def draw_hitbox(self, surface):  # Debug method to visualize hitbox
-        pygame.draw.rect(surface, 'red', self.hitbox_rect, 1)
