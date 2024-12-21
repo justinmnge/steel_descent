@@ -166,7 +166,7 @@ class Shell(pygame.sprite.Sprite):
         # movement
         self.pos = pygame.Vector2(pos)
         self.direction = direction
-        self.speed = 400
+        self.speed = 500
         self.x_offset = x_offset
         self.z = 4
         self.collision_sprites = collision_sprites
