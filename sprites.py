@@ -208,15 +208,9 @@ class Shell(pygame.sprite.Sprite):
         for sprite in self.collision_sprites:
             if self.hitbox_rect.colliderect(sprite.hitbox_rect):  # Use hitbox_rect instead of rect
                 # Trigger impact animation at the collision point
-                mouse_pos = pygame.mouse.get_pos()  # Get the mouse position
                 impact_pos = self.hitbox_rect.center  # Position the impact animation at the collision point
-                ImpactAnimation(impact_pos, self.groups(), mouse_pos, self.direction)  # Trigger the impact animation with the mouse position
+                ImpactAnimation(impact_pos, self.groups(), pygame.mouse.get_pos(), self.direction)  # Trigger the impact animation with the mouse position and direction
                 self.kill()  # Destroy the shell on collision
-
-        # # Check collisions using the adjusted hitbox_rect
-        # for sprite in self.collision_sprites:
-        #     if self.hitbox_rect.colliderect(sprite.hitbox_rect):  # Use hitbox_rect instead of rect
-        #         self.kill()  # Destroy the shell on collision
 
 class ImpactAnimation(pygame.sprite.Sprite):
     def __init__(self, position, groups, mouse_pos, direction):
@@ -233,16 +227,18 @@ class ImpactAnimation(pygame.sprite.Sprite):
         # Use the direction vector of the shell to calculate the angle
         self.angle = self.calculate_angle(position, mouse_pos, direction)  # Pass direction vector
         self.rotate_image()  # Rotate the impact image to the correct angle
-    
+        
+        self.z = 5 # Set the z-value so this is rendered above all other objects
+        self.groups = groups
+        self.add(*groups)
+        
     def calculate_angle(self, position, mouse_pos, direction):
-        """Calculate the angle between the impact position, mouse position, and the direction vector."""
         # Calculate direction vector from the position to the mouse position
         dx = mouse_pos[0] - position[0]
         dy = mouse_pos[1] - position[1]
         
         # Calculate the angle of the direction vector for the player
         direction_angle = -degrees(atan2(direction.y, direction.x)) + 90
-        
         return direction_angle  # Use direction_angle directly for the top of the impact image
     
     def rotate_image(self):
