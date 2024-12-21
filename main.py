@@ -49,7 +49,7 @@ class Game:
             x_offset = 0
             
             # Create shell
-            Shell(self.shell_surf, spawn_pos, direction, (self.all_sprites, self.shell_sprites), x_offset)
+            Shell(self.shell_surf, spawn_pos, direction, (self.all_sprites, self.shell_sprites), x_offset, self.collision_sprites)
             
             # Start firing animation
             self.turret.start_firing()
@@ -74,7 +74,12 @@ class Game:
             self.all_sprites.change_layer(sprite, sprite.z)
             
         for obj in map.get_layer_by_name('Objects'):
-            sprite = CollisionSprite((obj.x, obj.y), obj.image, (self.all_sprites, self.collision_sprites))
+            sprite = CollisionSprite(
+                (obj.x, obj.y), 
+                obj.image, 
+                (self.all_sprites, self.collision_sprites),
+                hitbox_inflation=(-50, -50) # Adjust hitbox here
+            ) 
             sprite.z = 1  # Add z attribute
             self.all_sprites.add(sprite)
             self.all_sprites.change_layer(sprite, sprite.z)

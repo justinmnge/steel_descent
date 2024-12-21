@@ -9,10 +9,29 @@ class Sprite(pygame.sprite.Sprite):
         self.ground = True
 
 class CollisionSprite(pygame.sprite.Sprite):
-    def __init__(self, pos, surf, groups):
+    def __init__(self, pos, surf, groups, hitbox_inflation=(0, 0)):
         super().__init__(groups)
         self.image = surf
         self.rect = self.image.get_frect(topleft = pos)
+        
+        # Apply hitbox inflation: shrinking by default with negative values
+        self.hitbox_rect = self.rect.inflate(*hitbox_inflation)  # Modify hitbox size
+        
+        # Make sure to set up the groups
+        self.groups = groups
+        
+    def update(self, dt):
+        # Update logic for movement, collision, etc.
+        pass
+
+    def draw(self, surface, offset=(0, 0)):
+        """Draw the sprite and optionally the hitbox for debugging"""
+        surface.blit(self.image, self.rect.topleft + pygame.Vector2(offset))
+        
+        # Debug print to check the size of the hitbox
+        print(f"Hitbox size: {self.hitbox_rect.size}")
+        
+        pygame.draw.rect(surface, (255, 0, 0), self.hitbox_rect.topleft + pygame.Vector2(offset), 2)
         
 class Turret(pygame.sprite.Sprite):
     def __init__(self, player, groups):
@@ -118,7 +137,7 @@ class Turret(pygame.sprite.Sprite):
             surface.blit(rotated_firing_frame, firing_rect.topleft)
 
 class Shell(pygame.sprite.Sprite):
-    def __init__(self, surf, pos, direction, groups, x_offset):
+    def __init__(self, surf, pos, direction, groups, x_offset, collision_sprites, hitbox_inflation=(-110, -110)):
         super().__init__(groups)
         self.original_image = surf
         
@@ -140,12 +159,17 @@ class Shell(pygame.sprite.Sprite):
         self.rect = self.image.get_frect(center = pos)
         self.glow_rect = self.glow_image.get_frect(center = pos)
         
+        self.image = self.original_image
+        self.rect = self.image.get_rect(center=pos)
+        self.hitbox_rect = self.rect.inflate(*hitbox_inflation)  # Adjusted hitbox
+        
         # movement
         self.pos = pygame.Vector2(pos)
         self.direction = direction
         self.speed = 400
         self.x_offset = x_offset
         self.z = 4
+        self.collision_sprites = collision_sprites
         
         # Calculate angle of the shell based on the direction vector
         self.angle = -degrees(atan2(self.direction.y, self.direction.x)) + 270
@@ -174,7 +198,13 @@ class Shell(pygame.sprite.Sprite):
     def update(self, dt):
         # Update position
         movement = self.direction * self.speed * dt
+        old_pos = self.pos.copy() # new
         self.pos += movement
         self.rect.center = self.pos
-        self.glow_rect.center = self.pos
+        self.hitbox_rect.center = self.pos
         self.rotate_shell()
+
+        # Check collisions using the adjusted hitbox_rect
+        for sprite in self.collision_sprites:
+            if self.hitbox_rect.colliderect(sprite.hitbox_rect):  # Use hitbox_rect instead of rect
+                self.kill()  # Destroy the shell on collision
