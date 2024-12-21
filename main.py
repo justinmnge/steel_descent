@@ -93,7 +93,7 @@ class Game:
                 self.turret.z = 3  # Add z attribute
                 self.all_sprites.add(self.turret)
                 self.all_sprites.change_layer(self.turret, self.turret.z)
-        
+    
     def run(self):
         while self.running:
             dt = self.clock.tick() / 1000            
@@ -110,12 +110,12 @@ class Game:
             
             # draw
             self.display_surface.fill('black')
-            self.all_sprites.draw(self.player.rect.center)
+            self.all_sprites.custom_draw(self.player.rect.center)  # Changed from draw to custom_draw
             self.turret.draw(self.display_surface, self.player.rect.center)
-                            
-            pygame.display.update()
             
-        pygame.quit()
+            pygame.display.update()
+        
+    pygame.quit()
 
 if __name__ == '__main__':
     game = Game()

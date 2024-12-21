@@ -116,13 +116,29 @@ class Turret(pygame.sprite.Sprite):
             rotated_firing_frame = pygame.transform.rotozoom(firing_frame, self.angle, 1)
             firing_rect = rotated_firing_frame.get_frect(center=shifted_rect.center)
             surface.blit(rotated_firing_frame, firing_rect.topleft)
-            
+
 class Shell(pygame.sprite.Sprite):
     def __init__(self, surf, pos, direction, groups, x_offset):
         super().__init__(groups)
         self.original_image = surf
+        
+        # Create a glowing effect by scaling up and brightening
+        # First, create a larger version for the glow
+        glow_size = (surf.get_width() * 1.5, surf.get_height() * 1.5)
+        self.glow_image = pygame.transform.scale(surf, glow_size)
+        
+        # Brighten the glow image
+        bright_surf = self.glow_image.copy()
+        bright_surf.fill((100, 100, 100), special_flags=pygame.BLEND_RGB_ADD)
+        self.glow_image = bright_surf
+        
+        # Brighten the main image
+        self.original_image = surf.copy()
+        self.original_image.fill((50, 50, 50), special_flags=pygame.BLEND_RGB_ADD)
+        
         self.image = self.original_image
         self.rect = self.image.get_frect(center = pos)
+        self.glow_rect = self.glow_image.get_frect(center = pos)
         
         # movement
         self.pos = pygame.Vector2(pos)
@@ -132,18 +148,33 @@ class Shell(pygame.sprite.Sprite):
         self.z = 4
         
         # Calculate angle of the shell based on the direction vector
-        self.angle = -degrees(atan2(self.direction.y, self.direction.x)) + 270 # Point bottom of shell towards the mouse
-        self.rotate_shell()  # Apply rotation to the shell image
+        self.angle = -degrees(atan2(self.direction.y, self.direction.x)) + 270
+        self.rotate_shell()
 
     def rotate_shell(self):
-        """Rotate the shell image to face the direction of movement."""
+        """Rotate both the shell image and its glow effect."""
         self.image = pygame.transform.rotozoom(self.original_image, self.angle, 1)
-        self.rect = self.image.get_frect(center=self.rect.center)  # Keep the center of the shell intact after rotation
+        self.glow_image_rotated = pygame.transform.rotozoom(self.glow_image, self.angle, 1)
+        
+        # Update both rectangles
+        old_center = self.rect.center
+        self.rect = self.image.get_frect(center=old_center)
+        self.glow_rect = self.glow_image_rotated.get_frect(center=old_center)
+        
+    def draw(self, surface, offset):
+        """Custom draw method to handle the glow effect."""
+        # Draw glow first
+        glow_pos = self.glow_rect.topleft + offset
+        surface.blit(self.glow_image_rotated, glow_pos)
+        
+        # Draw main shell
+        shell_pos = self.rect.topleft + offset
+        surface.blit(self.image, shell_pos)
         
     def update(self, dt):
         # Update position
-        old_pos = pygame.Vector2(self.pos)
         movement = self.direction * self.speed * dt
         self.pos += movement
         self.rect.center = self.pos
-        self.rotate_shell()  # Update rotation
+        self.glow_rect.center = self.pos
+        self.rotate_shell()
