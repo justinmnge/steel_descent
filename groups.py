@@ -11,6 +11,13 @@ class AllSprites(pygame.sprite.LayeredUpdates):
         self.offset.x = -(target_pos[0] - WINDOW_WIDTH / 2)
         self.offset.y = -(target_pos[1] - WINDOW_HEIGHT / 2)
         
-        for sprite in sorted(self.sprites(), key=lambda sprite: (self.get_layer_of_sprite(sprite), sprite.rect.centery)):
-            offset_pos = sprite.rect.topleft + self.offset
-            self.display_surface.blit(sprite.image, offset_pos)
+        # Get all sprites sorted by layer only
+        for sprite in self.sprites():
+            if hasattr(sprite, 'z'):
+                self.change_layer(sprite, sprite.z)
+        
+        # Draw sprites based on layer order
+        for layer in self.layers():
+            for sprite in self.get_sprites_from_layer(layer):
+                offset_pos = sprite.rect.topleft + self.offset
+                self.display_surface.blit(sprite.image, offset_pos)

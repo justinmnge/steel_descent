@@ -64,18 +64,20 @@ class Game:
                 self.can_shoot = True
     
     def setup(self):
-    # pytmx map
+        # pytmx map
         map = load_pygame(join('data', 'maps', 'map.tmx'))
         
         for x, y, image in map.get_layer_by_name('Ground').tiles():
             sprite = Sprite((x * TILE_SIZE, y * TILE_SIZE), image, self.all_sprites)
-            self.all_sprites.add(sprite)  # Add the sprite
-            self.all_sprites.change_layer(sprite, 0)  # Set layer 0
+            sprite.z = 0  # Add z attribute
+            self.all_sprites.add(sprite)
+            self.all_sprites.change_layer(sprite, sprite.z)
             
         for obj in map.get_layer_by_name('Objects'):
             sprite = CollisionSprite((obj.x, obj.y), obj.image, (self.all_sprites, self.collision_sprites))
-            self.all_sprites.add(sprite)  # Add the sprite
-            self.all_sprites.change_layer(sprite, 1)  # Set layer 1
+            sprite.z = 1  # Add z attribute
+            self.all_sprites.add(sprite)
+            self.all_sprites.change_layer(sprite, sprite.z)
             
         for obj in map.get_layer_by_name('Collisions'):
             CollisionSprite((obj.x, obj.y), pygame.Surface((obj.width, obj.height)), self.collision_sprites)
@@ -83,12 +85,14 @@ class Game:
         for obj in map.get_layer_by_name('Entities'):
             if obj.name == 'Player':
                 self.player = Player((obj.x, obj.y), self.all_sprites, self.collision_sprites)
-                self.all_sprites.add(self.player)  # Add the player sprite
-                self.all_sprites.change_layer(self.player, 2)  # Set layer 2
+                self.player.z = 2  # Add z attribute
+                self.all_sprites.add(self.player)
+                self.all_sprites.change_layer(self.player, self.player.z)
                 
                 self.turret = Turret(self.player, self.all_sprites)
-                self.all_sprites.add(self.turret)  # Add the turret sprite
-                self.all_sprites.change_layer(self.turret, 3)  # Set layer 3
+                self.turret.z = 3  # Add z attribute
+                self.all_sprites.add(self.turret)
+                self.all_sprites.change_layer(self.turret, self.turret.z)
         
     def run(self):
         while self.running:
