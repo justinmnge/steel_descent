@@ -18,43 +18,105 @@ class Turret(pygame.sprite.Sprite):
     def __init__(self, player, groups):
         # player connection
         self.player = player
-        self.distance = 0
+        self.distance = 0 # The distance from the player to the turret's muzzle
         self.angle = 0
-        self.player_direction = pygame.Vector2()
+        self.firing_frame_duration = 200  # Duration for each firing animation frame in milliseconds
+        super().__init__(groups)        
         
-        # sprite setup
-        super().__init__(groups)
-        self.original_image = pygame.image.load(join('images', 'turret', 'player_0.png'))
-        self.image = self.original_image
-        self.rect = self.image.get_frect(center = player.rect.center)
+        # Turret frames
+        self.turret_frames = [
+            pygame.image.load(join('images', 'turret', f'player_{i}.png')).convert_alpha()
+            for i in range(5)
+        ]
+        self.turret_frame_index = 0
+        self.turret_timer = pygame.time.get_ticks()
+        self.turret_frame_duration = 100  # Time per turret frame (in milliseconds)
+
+        # Firing frames
+        self.firing_frames = [
+            pygame.image.load(join('images', 'fire', f'player_{i}.png')).convert_alpha()
+            for i in range(3)
+        ]
+        self.firing_frame_index = 0
+        self.firing = False
+        self.firing_timer = 0
+        self.firing_frame_duration = 100  # Time per firing frame
+
+        # Image and rect
+        self.image = self.turret_frames[0]
+        self.rect = self.image.get_frect(center=player.rect.center)
+
     
     def get_direction(self):
         """Calculate the direction vector from the player to the mouse position."""
         mouse_pos = pygame.Vector2(pygame.mouse.get_pos())
         player_pos = pygame.Vector2(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2)  # Assuming the player is centered
-        self.player_direction = mouse_pos - player_pos
-        self.angle = -degrees(atan2(self.player_direction.y, self.player_direction.x)) + 90 # Calculate the angle
+        direction = mouse_pos - player_pos
+        self.angle = -degrees(atan2(direction.y, direction.x)) + 90
         
-    def rotate_turret(self):
-        """Rotate the turret image to face the direction of the mouse."""
-        self.image = pygame.transform.rotozoom(self.original_image, self.angle, 1)
-        # Calculate offset position based on angle and distance
-        offset = pygame.Vector2(self.distance, 0).rotate(-self.angle)
-        player_center = pygame.Vector2(self.player.rect.center)
-        new_pos = player_center + offset
-        self.rect = self.image.get_frect(center=new_pos)  # Position relative to player with offset
+    def rotate_turret(self):        
+        # Rotate turret animation frame
+        current_frame = self.turret_frames[self.turret_frame_index]
+        rotated_image = pygame.transform.rotozoom(current_frame, self.angle, 1)
+        self.image = rotated_image
+        self.rect = self.image.get_frect(center=self.player.rect.center)
+    
+    def start_firing(self):
+        """Start the firing animation."""
+        self.firing = True
+        self.firing_timer = pygame.time.get_ticks()
+        self.firing_frame_index = 0
         
     def update(self, _):
-        """Update the turret's position and rotation."""
+        """Update the turret's rotation, firing animation, and turret animation."""
         self.get_direction()
-        self.rotate_turret()
-        
-        # Update position to stay aligned with player
-        self.rect.center = (
-            self.player.rect.centerx,
-            self.player.rect.centery - self.distance  # Keep same vertical offset
-        )
 
+        if self.firing:
+            current_time = pygame.time.get_ticks()
+
+            # Update firing animation frame
+            if current_time - self.firing_timer >= self.firing_frame_duration * (self.firing_frame_index + 1):
+                self.firing_frame_index += 1
+                if self.firing_frame_index >= len(self.firing_frames):
+                    self.firing_frame_index = 0
+                    self.firing = False  # Stop firing animation once it completes
+
+            # Update turret animation frame
+            if current_time - self.firing_timer >= self.firing_frame_duration * (self.turret_frame_index + 1):
+                self.turret_frame_index += 1
+                if self.turret_frame_index >= len(self.turret_frames):
+                    self.turret_frame_index = 0  # Reset to first frame when animation ends
+
+        else:
+            # If not firing, reset the turret to its default frame
+            self.turret_frame_index = 0
+
+        # Handle firing animation offset and rotation
+        if self.firing:
+            firing_frame = self.firing_frames[self.firing_frame_index]
+            rotated_firing_frame = pygame.transform.rotozoom(firing_frame, self.angle, 1)
+            firing_offset = pygame.Vector2(0, 0).rotate(-self.angle)
+            firing_pos = pygame.Vector2(self.rect.center) + firing_offset
+            self.firing_rect = rotated_firing_frame.get_frect(center=firing_pos)
+
+        # Always rotate the turret, regardless of firing
+        self.rotate_turret()
+                    
+    def draw(self, surface, center):
+        # Calculate offset
+        offset = pygame.Vector2(center) - (WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2)
+
+        # Draw the turret
+        shifted_rect = self.rect.move(-offset.x, -offset.y)
+        surface.blit(self.image, shifted_rect.topleft)
+
+        # Draw firing animation
+        if self.firing:
+            firing_frame = self.firing_frames[self.firing_frame_index]
+            rotated_firing_frame = pygame.transform.rotozoom(firing_frame, self.angle, 1)
+            firing_rect = rotated_firing_frame.get_frect(center=shifted_rect.center)
+            surface.blit(rotated_firing_frame, firing_rect.topleft)
+            
 class Shell(pygame.sprite.Sprite):
     def __init__(self, surf, pos, direction, groups, x_offset):
         super().__init__(groups)
@@ -70,7 +132,7 @@ class Shell(pygame.sprite.Sprite):
         self.z = 4
         
         # Calculate angle of the shell based on the direction vector
-        self.angle = -degrees(atan2(self.direction.y, self.direction.x)) + 270  # Point bottom of shell towards the mouse
+        self.angle = -degrees(atan2(self.direction.y, self.direction.x)) + 270 # Point bottom of shell towards the mouse
         self.rotate_shell()  # Apply rotation to the shell image
 
     def rotate_shell(self):

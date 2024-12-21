@@ -29,7 +29,6 @@ class Game:
     
     def load_images(self):
         self.shell_surf = pygame.image.load(join('images', 'fire', 'player_shell.png')).convert_alpha()
-        print("Shell image loaded:", self.shell_surf.get_size())
     
     def input(self):
         # mouse left-click
@@ -51,6 +50,9 @@ class Game:
             
             # Create shell
             Shell(self.shell_surf, spawn_pos, direction, (self.all_sprites, self.shell_sprites), x_offset)
+            
+            # Start firing animation
+            self.turret.start_firing()
             
             self.can_shoot = False
             self.shoot_time = pygame.time.get_ticks()
@@ -105,6 +107,7 @@ class Game:
             # draw
             self.display_surface.fill('black')
             self.all_sprites.draw(self.player.rect.center)
+            self.turret.draw(self.display_surface, self.player.rect.center)
                             
             pygame.display.update()
             
