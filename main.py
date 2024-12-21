@@ -18,6 +18,7 @@ class Game:
         self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
         self.shell_sprites = pygame.sprite.Group()
+        self.impact_animations = pygame.sprite.Group()  # Create a group for impact animations
         
         # setup
         self.setup()
@@ -99,6 +100,10 @@ class Game:
                 self.all_sprites.add(self.turret)
                 self.all_sprites.change_layer(self.turret, self.turret.z)
     
+    def spawn_impact_animation(self, position, mouse_pos, direction):
+        # Add the ImpactAnimation to the group
+        impact_animation = ImpactAnimation(position, (self.all_sprites, self.impact_animations), mouse_pos, direction)
+    
     def run(self):
         while self.running:
             dt = self.clock.tick() / 1000            
@@ -117,6 +122,7 @@ class Game:
             self.display_surface.fill('black')
             self.all_sprites.custom_draw(self.player.rect.center)  # Changed from draw to custom_draw
             self.turret.draw(self.display_surface, self.player.rect.center)
+            self.impact_animations.draw(self.display_surface)
             
             pygame.display.update()
         
